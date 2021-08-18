@@ -1,0 +1,7 @@
+# pip install -r requirements.txt
+
+# base ----------------------------------------
+opencv-python>=4.1.2
+Pillow
+scikit-learn
+labelme>=4.5.9
