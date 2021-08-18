@@ -9,3 +9,10 @@ Run python by below command.
 ```bash
 python labelme2yolo.py --json_dir /home/username/labelme_json_dir/ --val_size 0.2
 ```
+Script would generate YOLO format dataset labels and images under different folders, for example:
+```bash
+/home/username/labelme_json_dir/YOLODataset/labels/train/
+/home/username/labelme_json_dir/YOLODataset/labels/val/
+/home/username/labelme_json_dir/YOLODataset/images/train/
+/home/username/labelme_json_dir/YOLODataset/images/val/
+```
