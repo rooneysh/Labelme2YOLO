@@ -1,11 +1,12 @@
 '''
 Created on Aug 18, 2021
 
-@author: rooneysh
+@author: xiaosonh
 '''
 import os
 import sys
 import argparse
+import shutil
 
 import json
 import cv2
@@ -24,15 +25,17 @@ class Labelme2YOLO(object):
         self._label_dir_path = os.path.join(json_dir, 'YOLODataset/labels/')
         self._image_dir_path = os.path.join(json_dir, 'YOLODataset/images/')
         
-        self._make_train_val_dir(self._json_dir)
+        self._make_train_val_dir()
         
     def _make_train_val_dir(self):
         for yolo_path in (os.path.join(self._label_dir_path + 'train/'), 
                           os.path.join(self._label_dir_path + 'val/'),
                           os.path.join(self._image_dir_path + 'train/'), 
                           os.path.join(self._image_dir_path + 'val/')):
-            if not os.path.exists(yolo_path):
-                os.makedirs(yolo_path)
+            if os.path.exists(yolo_path):
+                shutil.rmtree(yolo_path)
+            
+            os.makedirs(yolo_path)    
                 
     def _get_label_id_map(self, json_dir):
         label_set = set()
@@ -78,14 +81,18 @@ class Labelme2YOLO(object):
     
         # convert labelme object to yolo format object, and save them to files
         # also get image from labelme json file and save them under images folder
-        for target_dir, json_name in zip(('train/', 'val/'), (train_json_names, val_json_names)):
-            json_path = os.path.join(self._json_dir, json_name)
-            json_data = json.load(open(json_path))
+        for target_dir, json_names in zip(('train/', 'val/'), 
+                                          (train_json_names, val_json_names)):
+            for json_name in json_names:
+                json_path = os.path.join(self._json_dir, json_name)
+                json_data = json.load(open(json_path))
                 
-            img_path = self._save_yolo_image(json_data, json_name, target_dir)
+                print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
                 
-            yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
-            self._save_yolo_label(json_path, target_dir, yolo_obj_list)
+                img_path = self._save_yolo_image(json_data, json_name, target_dir)
+                    
+                yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
+                self._save_yolo_label(json_name, target_dir, yolo_obj_list)
     
     def _get_yolo_object_list(self, json_data, img_path):
         def __get_object_desc(obj_port_list):
@@ -114,8 +121,10 @@ class Labelme2YOLO(object):
             
         return yolo_obj_list
     
-    def _save_yolo_label(self, json_path, yolo_obj_list):
-        txt_path = json_path.replace('.json', '.text')
+    def _save_yolo_label(self, json_name, target_dir, yolo_obj_list):
+        txt_path = os.path.join(self._label_dir_path, 
+                                target_dir, 
+                                json_name.replace('.json', '.text'))
 
         with open(txt_path, 'w+') as f:
             for yolo_obj in yolo_obj_list:
@@ -138,6 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_size',type=float,
                         help='Please input the validation dataset size, for example 0.1 ')
     args = parser.parse_args(sys.argv[1:])
-    
+     
     convertor = Labelme2YOLO(args.json_dir)
     convertor.convert(val_size=args.val_size)
+    
