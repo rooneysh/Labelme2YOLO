@@ -132,15 +132,12 @@ class Labelme2YOLO(object):
         return img_path
 
 if __name__ == '__main__':
-    argv = sys.argv[1:]
-    
     parser = argparse.ArgumentParser()
     parser.add_argument('--json_dir',type=str,
                         help='Please input the path of the labelme json files.')
-    parser.add_argument('--val_size',type=str,
+    parser.add_argument('--val_size',type=float,
                         help='Please input the validation dataset size, for example 0.1 ')
-    json_dir, val_size = parser.parse_args(argv)
+    args = parser.parse_args(sys.argv[1:])
     
-    convertor = Labelme2YOLO(json_dir)
-    convertor.convert(val_size=val_size)
-    
+    convertor = Labelme2YOLO(args.json_dir)
+    convertor.convert(val_size=args.val_size)
