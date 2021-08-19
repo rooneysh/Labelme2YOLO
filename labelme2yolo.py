@@ -141,12 +141,12 @@ class Labelme2YOLO(object):
         
         yolo_center_x= round(float(obj_center_x / img_w), 6)
         yolo_center_y = round(float(obj_center_y / img_h), 6)
-        yolo__w = round(float(obj_w / img_w), 6)
+        yolo_w = round(float(obj_w / img_w), 6)
         yolo_h = round(float(obj_h / img_h), 6)
             
         label_id = self._label_id_map[shape['label']]
         
-        return label_id, yolo_center_x, yolo_center_y, yolo__w, yolo_h
+        return label_id, yolo_center_x, yolo_center_y, yolo_w, yolo_h
     
     def _get_other_shape_yolo_object(self, shape, img_h, img_w):
         def __get_object_desc(obj_port_list):
@@ -161,12 +161,12 @@ class Labelme2YOLO(object):
                     
         yolo_center_x= round(float((obj_x_min + obj_w / 2.0) / img_w), 6)
         yolo_center_y = round(float((obj_y_min + obj_h / 2.0) / img_h), 6)
-        yolo__w = round(float(obj_w / img_w), 6)
+        yolo_w = round(float(obj_w / img_w), 6)
         yolo_h = round(float(obj_h / img_h), 6)
             
         label_id = self._label_id_map[shape['label']]
         
-        return label_id, yolo_center_x, yolo_center_y, yolo__w, yolo_h
+        return label_id, yolo_center_x, yolo_center_y, yolo_w, yolo_h
     
     def _save_yolo_label(self, json_name, label_dir_path, target_dir, yolo_obj_list):
         txt_path = os.path.join(label_dir_path, 
