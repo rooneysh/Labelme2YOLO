@@ -1,6 +1,7 @@
 # Labelme2YOLO
 
-Convert LabelMe Annotation Tool JSON format to YOLO text file format.
+Help converting LabelMe Annotation Tool JSON format to YOLO text file format. 
+If you've already marked your segmentation dataset by LabelMe, it's easy to use this tool to help converting to YOLO format dataset.
 
 ## Parameters Explain
 **--json_dir** LabelMe JSON files folder path.
