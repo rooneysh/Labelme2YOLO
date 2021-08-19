@@ -2,12 +2,17 @@
 
 Convert LabelMe Annotation Tool JSON format to YOLO text file format.
 
-## Parameters
+## Parameters Explain
 **--json_dir** LabelMe JSON files folder path.
+
 **--val_size (Optional)** Validation dataset size, for example 0.2 means 20% for validation and 80% for training.
+
 **--json_name (Optional)** Convert single LabelMe JSON file.
 
-Run python by below command.
+## How to Use
+
+### Convert JSON Files, split training and validation dataset by --val_size
+Run python command.
 ```bash
 python labelme2yolo.py --json_dir /home/username/labelme_json_dir/ --val_size 0.2
 ```
