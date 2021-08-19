@@ -12,7 +12,7 @@ Convert LabelMe Annotation Tool JSON format to YOLO text file format.
 ## How to Use
 
 ### Convert JSON Files, split training and validation dataset by --val_size
-Run python command.
+Put all LabelMe JSON files in to **labelme_json_dir**, and run this python command.
 ```bash
 python labelme2yolo.py --json_dir /home/username/labelme_json_dir/ --val_size 0.2
 ```
@@ -24,12 +24,18 @@ Script would generate YOLO format dataset labels and images under different fold
 /home/username/labelme_json_dir/YOLODataset/images/val/
 ```
 
+### Convert JSON Files, split training and validation dataset by folder
 If you already split train dataset and validation dataset for LabelMe by yourself, please put these folder under labelme_json_dir, for example,
 ```bash
 /home/username/labelme_json_dir/train/
 /home/username/labelme_json_dir/val/
 ```
-In this condition, --val_size would not work anymore. Script would read train and validation dataset by folder.
+Put all LabelMe JSON files in to **labelme_json_dir**. 
+Script would read train and validation dataset by folder.
+Run this python command.
+```bash
+python labelme2yolo.py --json_dir /home/username/labelme_json_dir/
+```
 Script would generate YOLO format dataset labels and images under different folders, for example,
 ```bash
 /home/username/labelme_json_dir/YOLODataset/labels/train/
