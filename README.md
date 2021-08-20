@@ -23,6 +23,8 @@ Script would generate YOLO format dataset labels and images under different fold
 /home/username/labelme_json_dir/YOLODataset/labels/val/
 /home/username/labelme_json_dir/YOLODataset/images/train/
 /home/username/labelme_json_dir/YOLODataset/images/val/
+
+/home/username/labelme_json_dir/YOLODataset/dataset.yaml
 ```
 
 ### 2. Convert JSON files, split training and validation dataset by folder
@@ -43,6 +45,8 @@ Script would generate YOLO format dataset labels and images under different fold
 /home/username/labelme_json_dir/YOLODataset/labels/val/
 /home/username/labelme_json_dir/YOLODataset/images/train/
 /home/username/labelme_json_dir/YOLODataset/images/val/
+
+/home/username/labelme_json_dir/YOLODataset/dataset.yaml
 ```
 
 ### 3. Convert single JSON file
