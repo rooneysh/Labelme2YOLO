@@ -20,18 +20,21 @@ from labelme import utils
 
 class Labelme2YOLO(object):
     
-    def __init__(self, json_dir):
+    def __init__(self, json_dir, to_seg=False):
         self._json_dir = json_dir
         
         self._label_id_map = self._get_label_id_map(self._json_dir)
-        
+        self._to_seg = to_seg
+
+        i = 'YOLODataset'
+        i += '_seg/' if to_seg else '/'
+        self._save_path_pfx = os.path.join(self._json_dir, i)
+
     def _make_train_val_dir(self):
-        self._label_dir_path = os.path.join(self._json_dir, 
-                                            'YOLODataset/labels/')
-        self._image_dir_path = os.path.join(self._json_dir, 
-                                            'YOLODataset/images/')
-        
-        for yolo_path in (os.path.join(self._label_dir_path + 'train/'), 
+        self._label_dir_path = os.path.join(self._save_path_pfx, 'labels/')
+        self._image_dir_path = os.path.join(self._save_path_pfx, 'images/')
+
+        for yolo_path in (os.path.join(self._label_dir_path + 'train/'),
                           os.path.join(self._label_dir_path + 'val/'),
                           os.path.join(self._image_dir_path + 'train/'), 
                           os.path.join(self._image_dir_path + 'val/')):
@@ -138,10 +141,42 @@ class Labelme2YOLO(object):
         return yolo_obj_list
     
     def _get_circle_shape_yolo_object(self, shape, img_h, img_w):
+        label_id = self._label_id_map[shape['label']]
         obj_center_x, obj_center_y = shape['points'][0]
-        
-        radius = math.sqrt((obj_center_x - shape['points'][1][0]) ** 2 + 
+
+        radius = math.sqrt((obj_center_x - shape['points'][1][0]) ** 2 +
                            (obj_center_y - shape['points'][1][1]) ** 2)
+
+        if self._to_seg:
+            retval = [label_id]
+
+            n_part = radius / 10
+            n_part = int(n_part) if n_part > 4 else 4
+            n_part2 = n_part << 1
+
+            pt_quad = [None for i in range(0, 4)]
+            pt_quad[0] = [[obj_center_x + math.cos(i * math.pi / n_part2) * radius,
+                         obj_center_y - math.sin(i * math.pi / n_part2) * radius]
+                         for i in range(1, n_part)]
+            pt_quad[1] = [[obj_center_x * 2 - x1, y1] for x1, y1 in pt_quad[0]]
+            pt_quad[1].reverse()
+            pt_quad[3] = [[x1, obj_center_y * 2 - y1] for x1, y1 in pt_quad[0]]
+            pt_quad[3].reverse()
+            pt_quad[2] = [[obj_center_x * 2 - x1, y1] for x1, y1 in pt_quad[3]]
+            pt_quad[2].reverse()
+
+            pt_quad[0].append([obj_center_x, obj_center_y - radius])
+            pt_quad[1].append([obj_center_x - radius, obj_center_y])
+            pt_quad[2].append([obj_center_x, obj_center_y + radius])
+            pt_quad[3].append([obj_center_x + radius, obj_center_y])
+
+            for i in pt_quad:
+                for j in i:
+                    j[0] = round(float(j[0]) / img_w, 6)
+                    j[1] = round(float(j[1]) / img_h, 6)
+                    retval.extend(j)
+            return retval
+
         obj_w = 2 * radius
         obj_h = 2 * radius
         
@@ -149,12 +184,20 @@ class Labelme2YOLO(object):
         yolo_center_y = round(float(obj_center_y / img_h), 6)
         yolo_w = round(float(obj_w / img_w), 6)
         yolo_h = round(float(obj_h / img_h), 6)
-            
-        label_id = self._label_id_map[shape['label']]
-        
+
         return label_id, yolo_center_x, yolo_center_y, yolo_w, yolo_h
-    
+
     def _get_other_shape_yolo_object(self, shape, img_h, img_w):
+        label_id = self._label_id_map[shape['label']]
+
+        if self._to_seg:
+            retval = [label_id]
+            for i in shape['points']:
+                i[0] = round(float(i[0]) / img_w, 6)
+                i[1] = round(float(i[1]) / img_h, 6)
+                retval.extend(i)
+            return retval
+
         def __get_object_desc(obj_port_list):
             __get_dist = lambda int_list: max(int_list) - min(int_list)
             
@@ -169,9 +212,7 @@ class Labelme2YOLO(object):
         yolo_center_y = round(float((obj_y_min + obj_h / 2.0) / img_h), 6)
         yolo_w = round(float(obj_w / img_w), 6)
         yolo_h = round(float(obj_h / img_h), 6)
-            
-        label_id = self._label_id_map[shape['label']]
-        
+
         return label_id, yolo_center_x, yolo_center_y, yolo_w, yolo_h
     
     def _save_yolo_label(self, json_name, label_dir_path, target_dir, yolo_obj_list):
@@ -181,11 +222,14 @@ class Labelme2YOLO(object):
 
         with open(txt_path, 'w+') as f:
             for yolo_obj_idx, yolo_obj in enumerate(yolo_obj_list):
-                yolo_obj_line = '%s %s %s %s %s\n' % yolo_obj \
-                    if yolo_obj_idx + 1 != len(yolo_obj_list) else \
-                    '%s %s %s %s %s' % yolo_obj
+                yolo_obj_line = ""
+                for i in yolo_obj:
+                    yolo_obj_line += f'{i} '
+                yolo_obj_line = yolo_obj_line[:-1]
+                if yolo_obj_idx != len(yolo_obj_list) - 1:
+                    yolo_obj_line += '\n'
                 f.write(yolo_obj_line)
-                
+
     def _save_yolo_image(self, json_data, json_name, image_dir_path, target_dir):
         img_name = json_name.replace('.json', '.png')
         img_path = os.path.join(image_dir_path, target_dir,img_name)
@@ -197,8 +241,8 @@ class Labelme2YOLO(object):
         return img_path
     
     def _save_dataset_yaml(self):
-        yaml_path = os.path.join(self._json_dir, 'YOLODataset/', 'dataset.yaml')
-        
+        yaml_path = os.path.join(self._save_path_pfx, 'dataset.yaml')
+
         with open(yaml_path, 'w+') as yaml_file:
             yaml_file.write('train: %s\n' % \
                             os.path.join(self._image_dir_path, 'train/'))
@@ -221,11 +265,12 @@ if __name__ == '__main__':
                         help='Please input the validation dataset size, for example 0.1 ')
     parser.add_argument('--json_name',type=str, nargs='?', default=None,
                         help='If you put json name, it would convert only one json file to YOLO.')
+    parser.add_argument('--seg', action='store_true',
+                        help='Convert to YOLOv5 v7.0 segmentation dataset')
     args = parser.parse_args(sys.argv[1:])
-         
-    convertor = Labelme2YOLO(args.json_dir)
+
+    convertor = Labelme2YOLO(args.json_dir, to_seg=args.seg)
     if args.json_name is None:
         convertor.convert(val_size=args.val_size)
     else:
         convertor.convert_one(args.json_name)
-    
