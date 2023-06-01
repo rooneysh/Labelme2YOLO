@@ -4,7 +4,7 @@ Help converting LabelMe Annotation Tool JSON format to YOLO text file format.
 If you've already marked your segmentation dataset by LabelMe, it's easy to use this tool to help converting to YOLO format dataset.
 
 ## Parameters Explain
-**--json_dir** LabelMe JSON files folder path.
+**--json_dir** LabelMe JSON files folder path. (single folder with images and json files)
 
 **--val_size (Optional)** Validation dataset size, for example 0.2 means 20% for validation and 80% for training.
 

@@ -49,20 +49,24 @@ class Labelme2YOLO(object):
                 data = json.load(open(json_path))
                 for shape in data['shapes']:
                     label_set.add(shape['label'])
-        
-        return OrderedDict([(label, label_id) \
-                            for label_id, label in enumerate(label_set)])
-    
+
+        # sort label_set
+        label_list = list(label_set)
+        label_list.sort()
+
+        return OrderedDict([(label, label_id)
+                            for label_id, label in enumerate(label_list)])
+
     def _train_test_split(self, folders, json_names, val_size):
         if len(folders) > 0 and 'train' in folders and 'val' in folders:
             train_folder = os.path.join(self._json_dir, 'train/')
-            train_json_names = [train_sample_name + '.json' \
-                                for train_sample_name in os.listdir(train_folder) \
+            train_json_names = [train_sample_name + '.json'
+                                for train_sample_name in os.listdir(train_folder)
                                 if os.path.isdir(os.path.join(train_folder, train_sample_name))]
             
             val_folder = os.path.join(self._json_dir, 'val/')
-            val_json_names = [val_sample_name + '.json' \
-                              for val_sample_name in os.listdir(val_folder) \
+            val_json_names = [val_sample_name + '.json'
+                              for val_sample_name in os.listdir(val_folder)
                               if os.path.isdir(os.path.join(val_folder, val_sample_name))]
             
             return train_json_names, val_json_names
@@ -75,13 +79,14 @@ class Labelme2YOLO(object):
         return train_json_names, val_json_names
     
     def convert(self, val_size):
-        json_names = [file_name for file_name in os.listdir(self._json_dir) \
-                      if os.path.isfile(os.path.join(self._json_dir, file_name)) and \
+        json_names = [file_name for file_name in os.listdir(self._json_dir)
+                      if os.path.isfile(os.path.join(self._json_dir, file_name)) and
                       file_name.endswith('.json')]
-        folders =  [file_name for file_name in os.listdir(self._json_dir) \
-                    if os.path.isdir(os.path.join(self._json_dir, file_name))]
-        train_json_names, val_json_names = self._train_test_split(folders, json_names, val_size)
-        
+        folders = [file_name for file_name in os.listdir(self._json_dir)
+                   if os.path.isdir(os.path.join(self._json_dir, file_name))]
+        train_json_names, val_json_names = self._train_test_split(
+            folders, json_names, val_size)
+
         self._make_train_val_dir()
     
         # convert labelme object to yolo format object, and save them to files
@@ -91,12 +96,20 @@ class Labelme2YOLO(object):
             for json_name in json_names:
                 json_path = os.path.join(self._json_dir, json_name)
                 json_data = json.load(open(json_path))
-                
-                print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
-                
-                img_path = self._save_yolo_image(json_data, 
-                                                 json_name, 
-                                                 self._image_dir_path, 
+
+                # check if imageData exists and is not None
+                if 'imageData' not in json_data or json_data['imageData'] is None or json_data['imageData'] == 'null':
+                    print(f"imageData is missing or None in {json_name}")
+                    print(f"Suggestion: Save annotations by enabling imageData option in annotation tool.")
+                    print(f"Skipping {json_name} as imageData is missing or None")
+                    continue
+
+                print('Converting %s for %s ...' %
+                      (json_name, target_dir.replace('/', '')))
+
+                img_path = self._save_yolo_image(json_data,
+                                                 json_name,
+                                                 self._image_dir_path,
                                                  target_dir)
                     
                 yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
@@ -156,9 +169,9 @@ class Labelme2YOLO(object):
     
     def _get_other_shape_yolo_object(self, shape, img_h, img_w):
         def __get_object_desc(obj_port_list):
-            __get_dist = lambda int_list: max(int_list) - min(int_list)
-            
-            x_lists = [port[0] for port in obj_port_list]        
+            def __get_dist(int_list): return max(int_list) - min(int_list)
+
+            x_lists = [port[0] for port in obj_port_list]
             y_lists = [port[1] for port in obj_port_list]
             
             return min(x_lists), __get_dist(x_lists), min(y_lists), __get_dist(y_lists)
@@ -200,9 +213,9 @@ class Labelme2YOLO(object):
         yaml_path = os.path.join(self._json_dir, 'YOLODataset/', 'dataset.yaml')
         
         with open(yaml_path, 'w+') as yaml_file:
-            yaml_file.write('train: %s\n' % \
+            yaml_file.write('train: %s\n' %
                             os.path.join(self._image_dir_path, 'train/'))
-            yaml_file.write('val: %s\n\n' % \
+            yaml_file.write('val: %s\n\n' %
                             os.path.join(self._image_dir_path, 'val/'))
             yaml_file.write('nc: %i\n\n' % len(self._label_id_map))
             
@@ -222,10 +235,15 @@ if __name__ == '__main__':
     parser.add_argument('--json_name',type=str, nargs='?', default=None,
                         help='If you put json name, it would convert only one json file to YOLO.')
     args = parser.parse_args(sys.argv[1:])
-         
-    convertor = Labelme2YOLO(args.json_dir)
-    if args.json_name is None:
-        convertor.convert(val_size=args.val_size)
-    else:
-        convertor.convert_one(args.json_name)
-    
+
+    # for debug
+    json_dir = "/home/kvnptl/work/test_factory/autolabeling_test/test_json_yolo_labels"
+    convertor = Labelme2YOLO(json_dir)
+    convertor.convert(val_size=0.1)
+
+    # convertor = Labelme2YOLO(args.json_dir)
+
+    # if args.json_name is None:
+    #     convertor.convert(val_size=args.val_size)
+    # else:
+    #     convertor.convert_one(args.json_name)
