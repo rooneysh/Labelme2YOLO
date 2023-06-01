@@ -237,7 +237,7 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
 
     # for debug
-    json_dir = "/home/kvnptl/work/test_factory/autolabeling_test/test_json_yolo_labels"
+    json_dir = "<path to the folder with json files>"
     convertor = Labelme2YOLO(json_dir)
     convertor.convert(val_size=0.1)
 
