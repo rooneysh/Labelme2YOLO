@@ -16,6 +16,7 @@ import PIL.Image
   
 from sklearn.model_selection import train_test_split
 from labelme import utils
+import yaml
 
 
 class Labelme2YOLO(object):
@@ -26,19 +27,16 @@ class Labelme2YOLO(object):
         self._label_id_map = self._get_label_id_map(self._json_dir)
         
     def _make_train_val_dir(self):
-        self._label_dir_path = os.path.join(self._json_dir, 
-                                            'YOLODataset/labels/')
-        self._image_dir_path = os.path.join(self._json_dir, 
-                                            'YOLODataset/images/')
+        self._dataset_dir_path = os.path.join(self._json_dir, 'YOLODataset/')
         
-        for yolo_path in (os.path.join(self._label_dir_path + 'train/'), 
-                          os.path.join(self._label_dir_path + 'val/'),
-                          os.path.join(self._image_dir_path + 'train/'), 
-                          os.path.join(self._image_dir_path + 'val/')):
+        for yolo_path in (os.path.join(self._dataset_dir_path, 'train/labels'),
+                          os.path.join(self._dataset_dir_path, 'train/images'),
+                          os.path.join(self._dataset_dir_path, 'val/labels'),
+                          os.path.join(self._dataset_dir_path, 'val/images')):
             if os.path.exists(yolo_path):
                 shutil.rmtree(yolo_path)
             
-            os.makedirs(yolo_path)    
+            os.makedirs(yolo_path)
                 
     def _get_label_id_map(self, json_dir):
         label_set = set()
@@ -82,41 +80,22 @@ class Labelme2YOLO(object):
         json_names = [file_name for file_name in os.listdir(self._json_dir)
                       if os.path.isfile(os.path.join(self._json_dir, file_name)) and
                       file_name.endswith('.json')]
-        folders = [file_name for file_name in os.listdir(self._json_dir)
-                   if os.path.isdir(os.path.join(self._json_dir, file_name))]
-        train_json_names, val_json_names = self._train_test_split(
-            folders, json_names, val_size)
+
+        train_json_names, val_json_names = train_test_split(json_names, test_size=val_size)
 
         self._make_train_val_dir()
-    
-        # convert labelme object to yolo format object, and save them to files
-        # also get image from labelme json file and save them under images folder
-        for target_dir, json_names in zip(('train/', 'val/'), 
-                                          (train_json_names, val_json_names)):
+
+        for target_dir, json_names in zip(('train/', 'val/'), (train_json_names, val_json_names)):
             for json_name in json_names:
                 json_path = os.path.join(self._json_dir, json_name)
                 json_data = json.load(open(json_path))
 
-                # check if imageData exists and is not None
-                if 'imageData' not in json_data or json_data['imageData'] is None or json_data['imageData'] == 'null':
-                    print(f"imageData is missing or None in {json_name}")
-                    print(f"Suggestion: Save annotations by enabling imageData option in annotation tool.")
-                    print(f"Skipping {json_name} as imageData is missing or None")
-                    continue
+                print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
 
-                print('Converting %s for %s ...' %
-                      (json_name, target_dir.replace('/', '')))
-
-                img_path = self._save_yolo_image(json_data,
-                                                 json_name,
-                                                 self._image_dir_path,
-                                                 target_dir)
+                img_path = self._save_yolo_image(json_data, json_name, self._dataset_dir_path, target_dir + 'images/')
                     
                 yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
-                self._save_yolo_label(json_name, 
-                                      self._label_dir_path, 
-                                      target_dir, 
-                                      yolo_obj_list)
+                self._save_yolo_label(json_name, self._dataset_dir_path, target_dir + 'labels/', yolo_obj_list)
         
         print('Generating dataset.yaml file ...')
         self._save_dataset_yaml()
@@ -210,20 +189,17 @@ class Labelme2YOLO(object):
         return img_path
     
     def _save_dataset_yaml(self):
-        yaml_path = os.path.join(self._json_dir, 'YOLODataset/', 'dataset.yaml')
-        
-        with open(yaml_path, 'w+') as yaml_file:
-            yaml_file.write('train: %s\n' %
-                            os.path.join(self._image_dir_path, 'train/'))
-            yaml_file.write('val: %s\n\n' %
-                            os.path.join(self._image_dir_path, 'val/'))
-            yaml_file.write('nc: %i\n\n' % len(self._label_id_map))
-            
-            names_str = ''
-            for label, _ in self._label_id_map.items():
-                names_str += "'%s', " % label
-            names_str = names_str.rstrip(', ')
-            yaml_file.write('names: [%s]' % names_str)
+        dataset_yaml = {
+            'train': os.path.join(self._dataset_dir_path, 'train/images'),
+            'val': os.path.join(self._dataset_dir_path, 'val/images'),
+            'nc': len(self._label_id_map),
+            'names': list(self._label_id_map.keys())
+        }
+
+        with open(os.path.join(self._dataset_dir_path, 'dataset.yaml'), 'w') as yaml_file:
+            yaml.dump(dataset_yaml, yaml_file, default_flow_style=False)
+
+        print('Dataset.yaml file saved in', self._dataset_dir_path)
     
 
 if __name__ == '__main__':
@@ -237,7 +213,7 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
 
     # for debug
-    json_dir = "<path to the folder with json files>"
+    json_dir = "/home/kvnptl/work/b_it_bots/b_it_bot_work/2d_object_detection/robocup_2023_dataset/dataset_collection_kevin_ravi/combined_308_461"
     convertor = Labelme2YOLO(json_dir)
     convertor.convert(val_size=0.1)
 
