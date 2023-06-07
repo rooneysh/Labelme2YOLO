@@ -193,8 +193,8 @@ class Labelme2YOLO(object):
     
     def _save_dataset_yaml(self):
         dataset_yaml = {
-            'train': os.path.join(self._dataset_dir_path, 'train/images'),
-            'val': os.path.join(self._dataset_dir_path, 'val/images'),
+            'train': os.path.join('train/images'),
+            'val': os.path.join('val/images'),
             'nc': len(self._label_id_map),
             'names': list(self._label_id_map.keys())
         }
