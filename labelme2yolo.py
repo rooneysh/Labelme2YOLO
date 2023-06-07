@@ -17,6 +17,7 @@ import PIL.Image
 from sklearn.model_selection import train_test_split
 from labelme import utils
 import yaml
+from tqdm import tqdm
 
 
 class Labelme2YOLO(object):
@@ -85,19 +86,21 @@ class Labelme2YOLO(object):
 
         self._make_train_val_dir()
 
-        for target_dir, json_names in zip(('train/', 'val/'), (train_json_names, val_json_names)):
-            for json_name in json_names:
+        for target_dir, json_names_sub in zip(('train/', 'val/'), (train_json_names, val_json_names)):
+            print('\nConverting for %s set ...' % target_dir.replace('/', ''))
+            for json_name in tqdm(json_names_sub):
                 json_path = os.path.join(self._json_dir, json_name)
                 json_data = json.load(open(json_path))
 
-                print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
+                # print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
 
                 img_path = self._save_yolo_image(json_data, json_name, self._dataset_dir_path, target_dir + 'images/')
                     
                 yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
                 self._save_yolo_label(json_name, self._dataset_dir_path, target_dir + 'labels/', yolo_obj_list)
         
-        print('Generating dataset.yaml file ...')
+        print(f"\nSuccessfully converted {len(json_names)} json files to YOLO format.")
+        print('\nGenerating dataset.yaml file ...')
         self._save_dataset_yaml()
                 
     def convert_one(self, json_name):
@@ -199,7 +202,7 @@ class Labelme2YOLO(object):
         with open(os.path.join(self._dataset_dir_path, 'dataset.yaml'), 'w') as yaml_file:
             yaml.dump(dataset_yaml, yaml_file, default_flow_style=False)
 
-        print('Dataset.yaml file saved in', self._dataset_dir_path)
+        print(f"\ndataset.yaml file saved in {self._dataset_dir_path}\n")
     
 
 if __name__ == '__main__':
@@ -213,9 +216,9 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
 
     # for debug
-    json_dir = "/home/kvnptl/work/b_it_bots/b_it_bot_work/2d_object_detection/robocup_2023_dataset/dataset_collection_kevin_ravi/combined_308_461"
+    json_dir = "<path to json dir"
     convertor = Labelme2YOLO(json_dir)
-    convertor.convert(val_size=0.1)
+    convertor.convert(val_size=0.1) # 10% for validation
 
     # convertor = Labelme2YOLO(args.json_dir)
 
