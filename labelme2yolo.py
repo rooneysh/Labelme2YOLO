@@ -216,7 +216,7 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
 
     # for debug
-    json_dir = "<path to json dir"
+    json_dir = "<path to json dir>"
     convertor = Labelme2YOLO(json_dir)
     convertor.convert(val_size=0.1) # 10% for validation
 
