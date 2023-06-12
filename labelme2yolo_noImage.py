@@ -31,9 +31,7 @@ class Labelme2YOLO(object):
         self._dataset_dir_path = os.path.join(self._json_dir, 'YOLODataset/')
         
         for yolo_path in (os.path.join(self._dataset_dir_path, 'train/labels'),
-                          os.path.join(self._dataset_dir_path, 'train/images'),
-                          os.path.join(self._dataset_dir_path, 'val/labels'),
-                          os.path.join(self._dataset_dir_path, 'val/images')):
+                          os.path.join(self._dataset_dir_path, 'val/labels')):
             if os.path.exists(yolo_path):
                 shutil.rmtree(yolo_path)
             
@@ -94,9 +92,7 @@ class Labelme2YOLO(object):
 
                 # print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
 
-                img_path = self._save_yolo_image(json_data, json_name, self._dataset_dir_path, target_dir + 'images/')
-                    
-                yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
+                yolo_obj_list = self._get_yolo_object_list(json_data)
                 self._save_yolo_label(json_name, self._dataset_dir_path, target_dir + 'labels/', yolo_obj_list)
         
         print(f"\nSuccessfully converted {len(json_names)} json files to YOLO format.")
@@ -109,20 +105,14 @@ class Labelme2YOLO(object):
         
         print('Converting %s ...' % json_name)
         
-        img_path = self._save_yolo_image(json_data, json_name, 
-                                         self._json_dir, '')
-        
-        yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
-        self._save_yolo_label(json_name, self._json_dir, 
-                              '', yolo_obj_list)
+        yolo_obj_list = self._get_yolo_object_list(json_data)
+        self._save_yolo_label(json_name, self._json_dir, '', yolo_obj_list)
     
-    def _get_yolo_object_list(self, json_data, img_path):
+    def _get_yolo_object_list(self, json_data):
         yolo_obj_list = []
         
-        img_h, img_w, _ = cv2.imread(img_path).shape
+        img_h, img_w = json_data['imageHeight'], json_data['imageWidth']
         for shape in json_data['shapes']:
-            # labelme circle shape is different from others
-            # it only has 2 points, 1st is circle center, 2nd is drag end point
             if shape['shape_type'] == 'circle':
                 yolo_obj = self._get_circle_shape_yolo_object(shape, img_h, img_w)
             else:
@@ -193,8 +183,8 @@ class Labelme2YOLO(object):
     
     def _save_dataset_yaml(self):
         dataset_yaml = {
-            'train': os.path.join('train/images'),
-            'val': os.path.join('val/images'),
+            'train': os.path.join(self._dataset_dir_path, 'train/images'),
+            'val': os.path.join(self._dataset_dir_path, 'val/images'),
             'nc': len(self._label_id_map),
             'names': list(self._label_id_map.keys())
         }
