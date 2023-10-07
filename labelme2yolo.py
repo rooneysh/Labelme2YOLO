@@ -94,7 +94,8 @@ class Labelme2YOLO(object):
                 
                 print('Converting %s for %s ...' % (json_name, target_dir.replace('/', '')))
                 
-                img_path = self._save_yolo_image(json_data, 
+                img_path = self._save_yolo_image(json_data,
+                                                 json_path, 
                                                  json_name, 
                                                  self._image_dir_path, 
                                                  target_dir)
@@ -114,7 +115,7 @@ class Labelme2YOLO(object):
         
         print('Converting %s ...' % json_name)
         
-        img_path = self._save_yolo_image(json_data, json_name, 
+        img_path = self._save_yolo_image(json_data, json_path, json_name, 
                                          self._json_dir, '')
         
         yolo_obj_list = self._get_yolo_object_list(json_data, img_path)
@@ -186,11 +187,14 @@ class Labelme2YOLO(object):
                     '%s %s %s %s %s' % yolo_obj
                 f.write(yolo_obj_line)
                 
-    def _save_yolo_image(self, json_data, json_name, image_dir_path, target_dir):
+    def _save_yolo_image(self, json_data, json_path, json_name, image_dir_path, target_dir):
+        old_img_path = json_path.replace('.json', '.png')
         img_name = json_name.replace('.json', '.png')
         img_path = os.path.join(image_dir_path, target_dir,img_name)
-        
-        if not os.path.exists(img_path):
+
+        if (os.path.exists(old_img_path)):
+            shutil.copy(old_img_path, img_path)
+        elif not os.path.exists(img_path):
             img = utils.img_b64_to_arr(json_data['imageData'])
             PIL.Image.fromarray(img).save(img_path)
         
