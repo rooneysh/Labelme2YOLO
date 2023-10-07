@@ -10,6 +10,8 @@ If you've already marked your segmentation dataset by LabelMe, it's easy to use 
 
 **--json_name (Optional)** Convert single LabelMe JSON file.
 
+**--seg (Optional)** Convert to [YOLOv5 v7.0](https://github.com/ultralytics/yolov5/tree/v7.0#segmentation--new) instance segmentation dataset.
+
 ## How to Use
 
 ### 1. Convert JSON files, split training and validation dataset by --val_size
@@ -19,6 +21,7 @@ python labelme2yolo.py --json_dir /home/username/labelme_json_dir/ --val_size 0.
 ```
 Script would generate YOLO format dataset labels and images under different folders, for example,
 ```bash
+# when specifying `--seg', "YOLODataset" will be "YOLODataset_seg"
 /home/username/labelme_json_dir/YOLODataset/labels/train/
 /home/username/labelme_json_dir/YOLODataset/labels/val/
 /home/username/labelme_json_dir/YOLODataset/images/train/
@@ -41,6 +44,7 @@ python labelme2yolo.py --json_dir /home/username/labelme_json_dir/
 ```
 Script would generate YOLO format dataset labels and images under different folders, for example,
 ```bash
+# when specifying `--seg', "YOLODataset" will be "YOLODataset_seg"
 /home/username/labelme_json_dir/YOLODataset/labels/train/
 /home/username/labelme_json_dir/YOLODataset/labels/val/
 /home/username/labelme_json_dir/YOLODataset/images/train/
