@@ -6,7 +6,7 @@ If you've already marked your segmentation dataset by LabelMe, it's easy to use 
 ## Parameters Explain
 **--json_dir** LabelMe JSON files folder path.
 
-**--val_size (Optional)** Validation dataset size, for example 0.2 means 20% for validation and 80% for training.
+**--val_size (Optional)** Validation dataset size, for example 0.2 means 20% for validation and 80% for training. Default value is 0.1 .
 
 **--json_name (Optional)** Convert single LabelMe JSON file.
 
