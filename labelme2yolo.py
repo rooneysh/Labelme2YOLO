@@ -261,7 +261,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--json_dir',type=str,
                         help='Please input the path of the labelme json files.')
-    parser.add_argument('--val_size',type=float, nargs='?', default=None,
+    parser.add_argument('--val_size',type=float, nargs='?', default=0.1,
                         help='Please input the validation dataset size, for example 0.1 ')
     parser.add_argument('--json_name',type=str, nargs='?', default=None,
                         help='If you put json name, it would convert only one json file to YOLO.')
