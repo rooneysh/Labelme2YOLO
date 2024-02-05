@@ -1,8 +1,10 @@
 '''
 Created on Aug 18, 2021
 
-@author: xiaosonh
+@ author: xiaosonh
+@ modify: wzm2256
 '''
+
 import os
 import sys
 import argparse
@@ -11,12 +13,33 @@ import math
 from collections import OrderedDict
 
 import json
-import cv2
+# import cv2
 import PIL.Image
-  
-from sklearn.model_selection import train_test_split
-from labelme import utils
+import pdb
 
+from sklearn.model_selection import train_test_split
+# from labelme import utils
+import base64
+import io
+import numpy as np
+
+def img_data_to_pil(img_data):
+    f = io.BytesIO()
+    f.write(img_data)
+    img_pil = PIL.Image.open(f)
+    return img_pil
+
+
+def img_data_to_arr(img_data):
+    img_pil = img_data_to_pil(img_data)
+    img_arr = np.array(img_pil)
+    return img_arr
+
+
+def img_b64_to_arr(img_b64):
+    img_data = base64.b64decode(img_b64)
+    img_arr = img_data_to_arr(img_data)
+    return img_arr
 
 class Labelme2YOLO(object):
     
@@ -127,7 +150,9 @@ class Labelme2YOLO(object):
     def _get_yolo_object_list(self, json_data, img_path):
         yolo_obj_list = []
         
-        img_h, img_w, _ = cv2.imread(img_path).shape
+        # img_h, img_w, _ = cv2.imread(img_path).shape
+        # pdb.set_trace()
+        img_w, img_h = PIL.Image.open(img_path).size
         for shape in json_data['shapes']:
             # labelme circle shape is different from others
             # it only has 2 points, 1st is circle center, 2nd is drag end point
@@ -235,8 +260,14 @@ class Labelme2YOLO(object):
         img_path = os.path.join(image_dir_path, target_dir,img_name)
         
         if not os.path.exists(img_path):
-            img = utils.img_b64_to_arr(json_data['imageData'])
-            PIL.Image.fromarray(img).save(img_path)
+            if json_data['imageData']:
+                # print("Using json['imageData']...")
+                img = img_b64_to_arr(json_data['imageData'])
+                PIL.Image.fromarray(img).save(img_path)
+            else:
+                raw_path = os.path.join(self._json_dir, json_data['imagePath'])
+                # print("Using raw imaging...")
+                PIL.Image.open(raw_path).save(img_path)
         
         return img_path
     
