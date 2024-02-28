@@ -12,6 +12,24 @@ If you've already marked your segmentation dataset by LabelMe, it's easy to use 
 
 **--seg (Optional)** Convert to [YOLOv5 v7.0](https://github.com/ultralytics/yolov5/tree/v7.0#segmentation--new) instance segmentation dataset.
 
+## how to install the environment
+1. clone the repo and go to the folder
+```
+git clone https://github.com/linwang9926/Labelme2YOLO.git
+cd Labelme2YOLO
+```
+
+2. create a new conda environment
+```
+conda create -n labelme2yolo python=3.9
+```
+
+3. activate the environment and install the requirements
+```
+conda activate labelme2yolo
+pip install -r requirements.txt -q
+```
+
 ## How to Use
 
 ### 1. Convert JSON files, split training and validation dataset by --val_size
