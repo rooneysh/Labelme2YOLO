@@ -235,8 +235,26 @@ class Labelme2YOLO(object):
         img_path = os.path.join(image_dir_path, target_dir,img_name)
         
         if not os.path.exists(img_path):
-            img = utils.img_b64_to_arr(json_data['imageData'])
-            PIL.Image.fromarray(img).save(img_path)
+            if json_data.get('imageData'):
+                img = utils.img_b64_to_arr(json_data['imageData'])
+                PIL.Image.fromarray(img).save(img_path)
+            else:
+                image_stem = os.path.splitext(json_name)[0]
+                image_extensions = {'.png', '.jpg', '.jpeg', '.bmp',
+                                    '.tif', '.tiff', '.webp'}
+                for file_name in sorted(os.listdir(self._json_dir)):
+                    stem, extension = os.path.splitext(file_name)
+                    source_path = os.path.join(self._json_dir, file_name)
+                    if (stem == image_stem and
+                            extension.lower() in image_extensions and
+                            os.path.isfile(source_path)):
+                        with PIL.Image.open(source_path) as img:
+                            img.save(img_path)
+                        break
+                else:
+                    raise FileNotFoundError(
+                        'No imageData or matching image found for %s in %s'
+                        % (json_name, self._json_dir))
         
         return img_path
     
